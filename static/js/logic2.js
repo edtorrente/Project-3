@@ -5,7 +5,7 @@ d3.json("/evMap").then(evStationCluster);
 function evStationMarkers(jsonData) {
 	var stationCoordinates = [];
 
-	for (i = 0; i < 1000; i++) {
+	for (i = 0; i < jsonData.length; i++) {
 		var marker = L.marker([jsonData[i].latitude, jsonData[i].longitude]).bindPopup("<h3>Station ID: " +
 			jsonData[i].stationID + "</h4>");
 
@@ -56,38 +56,55 @@ function mapMaker(stationLocations) {
 };
 
 // ===================================================
-// var myMap = L.map("map", {
-// 	center: [45.52, -122.67],
-// 	zoom: 3
-// });
 
-// L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-// 	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-// }).addTo(myMap);
 
-// d3.json("/evtart = centerPt.y - lineLength / 2,
-// 				res = [],
-// 				i;Map").then(function (jsonData) {
-// 	var markers = L.markerClusterGroup({
-// 		spiderfyShapePositions: function (count, centerPt) {
-// 			var distanceFromCenter = 35,
-// 				markerDistance = 45,
-// 				lineLength = markerDistance * (count - 1),
-// 				lineS
+anychart.onDocumentReady(function () {
+	// modify the data structure to work with AnyChart
+	var inputChart = [];
+	d3.json("/state-emission/overview").then(function (jsonData) {
 
-// 			res.length = count;
+		for (i = 0; i < jsonData.length; i++) {
+			var entityArray = [];
+			entityArray.push(jsonData[i].state, jsonData[i].percentage, jsonData[i].absolute);
+			inputChart.push(entityArray);
+		}
+		return inputChart;
+	});
+	// console.log(inputChart);
 
-// 			for (i = count - 1; i >= 0; i--) {
-// 				res[i] = new Point(centerPt.x + distanceFromCenter, lineStart + markerDistance * i);
-// 			}
 
-// 			return res;
-// 		}
-// 	});
+	// CREARTING THE CHART
+	var data = anychart.data.set(inputChart);
+	console.log(typeof (data));
 
-// 	for (i = 0; i < jsonData.length; i++) {
-// 		markers.addLayer(L.marker([jsonData[i].latitude, jsonData[i].longitude]).bindPopup("<h3>Station ID: " +
-// 			jsonData[i].stationID + "</h4>"))
-// 	}
-// 	myMap.addLayer(markers);
-// });
+	//,map the data
+	var seriesData_1 = data.mapAs({ x: 0, value: 1 });
+	console.log(seriesData_1)
+	var seriesData_2 = data.mapAs({ x: 0, value: 2 });
+
+	// create the chart using AnyChart
+	var chart = anychart.column();
+
+	// create the first series, set the data and name
+	var series1 = chart.column(seriesData_1);
+	series1.name("Percentage Change");
+
+	// create the second series, set the data and name
+	var series2 = chart.column(seriesData_2);
+	series2.name("Absolute Change");
+
+	// set the chart title
+	chart.title("State Level: Emission Change from 2000 to 2018");
+
+	// set the titles of the axes
+	var xAxis = chart.xAxis();
+	xAxis.title("States");
+	var yAxis = chart.yAxis();
+	yAxis.title("Changes: Percentage (%) and Abosolute ");
+
+	// set the container id
+	chart.container("graph-container");
+
+	// initiate drawing the chart
+	chart.draw();
+});
