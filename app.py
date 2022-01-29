@@ -9,10 +9,10 @@ from sqlalchemy import create_engine, func
 from flask import Flask, render_template, request, redirect, jsonify
 import json
 
-password = "199415011994Hai"
-#################################################
+password = "admin"
+##################################################
 # Database Setup
-#################################################
+##################################################
 
 
 # Initiate Flask Application
@@ -33,7 +33,7 @@ def startingPage():
 @app.route("/evMap")
 def evStationMaps():
     engine = create_engine(
-        'postgresql+psycopg2://postgres:199415011994Hai@localhost/Project_3_ev_stations')
+        f'postgresql+psycopg2://postgres:{password}@localhost/Project_3_ev_stations')
 
     # reflect an existing database into a new model
     Base = automap_base()
@@ -64,7 +64,7 @@ def evStationMaps():
 @app.route("/state-emission/overview")
 def statesco2_emission():
     engine = create_engine(
-        'postgresql+psycopg2://postgres:199415011994Hai@localhost/Project_3_ev_stations')
+        f'postgresql+psycopg2://postgres:{password}@localhost/Project_3_ev_stations')
 
     # reflect an existing database into a new model
     Base = automap_base()
@@ -87,7 +87,7 @@ def statesco2_emission():
         state_dict = {}
         state_dict["state"] = state
         state_dict['percentage'] = percentage
-        state_dict['absolute change'] = absolute
+        state_dict['absolute'] = absolute
         state_overview.append(state_dict)
 
     return jsonify(state_overview)
@@ -96,7 +96,7 @@ def statesco2_emission():
 @app.route("/us-emission")
 def usandworldco2():
     engine = create_engine(
-        'postgresql+psycopg2://postgres:199415011994Hai@localhost/Project_3_ev_stations')
+        f'postgresql+psycopg2://postgres:{password}@localhost/Project_3_ev_stations')
 
     # reflect an existing database into a new model
     Base = automap_base()
@@ -110,22 +110,20 @@ def usandworldco2():
 
     # this api only get the emission level of the US (filter with US only)
     results3 = session.query(
-        usandworldco2.entity, usandworldco2.year, statesco2_emission.absolute).all()
-
-    # filter(usandworldco2.entity == "United States").all()
+        usandworldco2.entity, usandworldco2.year, usandworldco2.annualco2emissions).filter(usandworldco2.entity == "United States").all()
 
     print("results3: ", results3)
     us_emission = []
     session.close()
 
-    for year in results3:
+    for entity, year, emission in results3:
         us_emission_dict = {}
         us_emission_dict["country"] = entity
         us_emission_dict['year'] = year
         us_emission_dict['annual emission'] = emission
         us_emission.append(us_emission_dict)
 
-    return us_emission
+    return jsonify(us_emission)
 
 
 if __name__ == '__main__':
